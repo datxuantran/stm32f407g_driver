@@ -205,8 +205,9 @@ typedef struct
  * Clock Enable und Disable Makros für SYSCFG
  * TODO: Vervollständigen Sie die Makros zum anschalten und Abschalten der Syscfg Clock
  */
-#define SYSCFG_PCLK_EN()						do{ (RCC->AHB2ENR |= (1 << 0)); }while(0)
-#define SYSCFG_PCLK_DI()						do{ (RCC->AHB2ENR &= ~(1 << 0)); }while(0)
+#define RCC_APB2ENR_SYSCFGEN					14
+#define SYSCFG_PCLK_EN()						do{ (RCC->APB2ENR |= (1 << RCC_APB2ENR_SYSCFGEN)); }while(0)
+#define SYSCFG_PCLK_DI()						do{ (RCC->APB2ENR &= ~(1 << RCC_APB2ENR_SYSCFGEN)); }while(0)
 
 /*
  * Register struct EXTI

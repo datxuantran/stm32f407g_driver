@@ -78,7 +78,7 @@ void GPIO_Init(GPIO_Handle_t *pGPIOHandle) {
 		}
 
 		// 2. Konfiguration des entsprechenden GPIO-Ports in SYSCFG_EXTICR
-		// SYSCFG_PCLK_EN();
+		SYSCFG_PCLK_EN();
 		uint8_t pinNumber = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber;
 		uint8_t x = pinNumber / 4;
 		uint8_t offset = (pinNumber % 4) * 4;
@@ -275,7 +275,7 @@ void GPIO_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnorDi) {
 
 void GPIO_IRQHandling(uint8_t PinNumber) {
 	// Abfrage und zurücksetzen des EXTI-PR bits
-	if(EXTI->PR & (1 << PinNumber)){
+	if (EXTI->PR & (1 << PinNumber)) {
 		// clear
 		EXTI->PR |= (1 << PinNumber);
 	}
