@@ -1,147 +1,212 @@
 /*
  * GPIO_Driver.c
- * Vorlage fürs Praktikum 
+ * Vorlage fürs Praktikum
  */
 
 #include <GPIO_Driver.h>
 
-void GPIO_PeriClockControl(GPIO_RegDef_t *pGPIOx, uint8_t EnorDi) {
-	if (EnorDi == ENABLE) {
-		if (pGPIOx == GPIOA) {
+void GPIO_PeriClockControl(GPIO_RegDef_t *pGPIOx, uint8_t EnorDi)
+{
+	if (EnorDi == ENABLE)
+	{
+		if (pGPIOx == GPIOA)
+		{
 			GPIOA_PCLK_EN();
-		} else if (pGPIOx == GPIOB) {
+		}
+		else if (pGPIOx == GPIOB)
+		{
 			GPIOB_PCLK_EN();
-		} else if (pGPIOx == GPIOC) {
+		}
+		else if (pGPIOx == GPIOC)
+		{
 			GPIOC_PCLK_EN();
-		} else if (pGPIOx == GPIOD) {
+		}
+		else if (pGPIOx == GPIOD)
+		{
 			GPIOD_PCLK_EN();
-		} else if (pGPIOx == GPIOE) {
+		}
+		else if (pGPIOx == GPIOE)
+		{
 			GPIOE_PCLK_EN();
-		} else if (pGPIOx == GPIOF) {
+		}
+		else if (pGPIOx == GPIOF)
+		{
 			GPIOF_PCLK_EN();
-		} else if (pGPIOx == GPIOG) {
+		}
+		else if (pGPIOx == GPIOG)
+		{
 			GPIOG_PCLK_EN();
-		} else if (pGPIOx == GPIOH) {
+		}
+		else if (pGPIOx == GPIOH)
+		{
 			GPIOH_PCLK_EN();
-		} else if (pGPIOx == GPIOI) {
+		}
+		else if (pGPIOx == GPIOI)
+		{
 			GPIOI_PCLK_EN();
 		}
-	} else {
+	}
+	else
+	{
 		// Implementieren Sie die Funktionalität der Clock Deaktivierung
-		if (pGPIOx == GPIOA) {
+		if (pGPIOx == GPIOA)
+		{
 			GPIOA_PCLK_DI();
-		} else if (pGPIOx == GPIOB) {
+		}
+		else if (pGPIOx == GPIOB)
+		{
 			GPIOB_PCLK_DI();
-		} else if (pGPIOx == GPIOC) {
+		}
+		else if (pGPIOx == GPIOC)
+		{
 			GPIOC_PCLK_DI();
-		} else if (pGPIOx == GPIOD) {
+		}
+		else if (pGPIOx == GPIOD)
+		{
 			GPIOD_PCLK_DI();
-		} else if (pGPIOx == GPIOE) {
+		}
+		else if (pGPIOx == GPIOE)
+		{
 			GPIOE_PCLK_DI();
-		} else if (pGPIOx == GPIOF) {
+		}
+		else if (pGPIOx == GPIOF)
+		{
 			GPIOF_PCLK_DI();
-		} else if (pGPIOx == GPIOG) {
+		}
+		else if (pGPIOx == GPIOG)
+		{
 			GPIOG_PCLK_DI();
-		} else if (pGPIOx == GPIOH) {
+		}
+		else if (pGPIOx == GPIOH)
+		{
 			GPIOH_PCLK_DI();
-		} else if (pGPIOx == GPIOI) {
+		}
+		else if (pGPIOx == GPIOI)
+		{
 			GPIOI_PCLK_DI();
 		}
 	}
 }
 
-// Implementieren Sie die weiteren Schritte. Denken Sie daran die Einträge eines Registers zurückzusetzen, bevor Sie einzelne Bits setzen!
-void GPIO_Init(GPIO_Handle_t *pGPIOHandle) {
-	// Configure the pin modus
-	if (pGPIOHandle->GPIO_PinConfig.GPIO_PinMode <= GPIO_MODE_ANALOG) {
-		//Konfigurieren des PIN in INPUT oder OUTPUT-Modus
-		uint8_t pinNumber = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber;
-		uint8_t LSB = (pinNumber << 1);
-		// Reset the mode register before setting individual bits
-		pGPIOHandle->pGPIOx->MODE_REG &= ~(0x3 << LSB);
-		pGPIOHandle->pGPIOx->MODE_REG |=
-				(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode << LSB);
-	} else {
-		// ####################################### Praktikum 3: IRQ ############################################################
-
-		// IRQ-Modus (Muss erst im dritten Praktikum bearbeitet werden)
-		// 1. Konfiguration für Trigger auf fallenende, steigende oder beide Flanken
-		// configure rising or falling trigger for pin_x
-		uint8_t lineNumber = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber;
-		if (pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_FT
-				|| pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_RFT) {
-			EXTI->FTSR |= (1 << lineNumber);
-		}
-		if (pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_RT
-				|| pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_RFT) {
-			EXTI->RTSR |= (1 << lineNumber);
-		}
-
-		// 2. Konfiguration des entsprechenden GPIO-Ports in SYSCFG_EXTICR
-		SYSCFG_PCLK_EN();
-		uint8_t pinNumber = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber;
-		uint8_t x = pinNumber / 4;
-		uint8_t offset = (pinNumber % 4) * 4;
-		uint8_t PORT_CODE = GPIO_BASEADDR_TO_CODE(pGPIOHandle->pGPIOx); // A, B, C, D, E, F, G, H
-		SYSCFG->EXTICR[x] |= (PORT_CODE << offset);
-
-		// 3  Aktivieren des EXTI Interrupts handling in IMR-Register
-//		uint8_t lineNumber = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber;
-		EXTI->IMR |= (1 << lineNumber);
-		// ####################################### ENDE IRQ #####################################################################
-	}
-
-	// Configure the output speed
+void configure_pin_mode(GPIO_Handle_t *pGPIOHandle)
+{
 	uint8_t pinNumber = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber;
 	uint8_t LSB = (pinNumber << 1);
-	// Reset the output speed register before setting individual bits
-	pGPIOHandle->pGPIOx->OUTPUT_SPEED &= ~(0x3 << LSB);
-	pGPIOHandle->pGPIOx->OUTPUT_SPEED |=
-			(pGPIOHandle->GPIO_PinConfig.GPIO_PinSpeed << LSB);
-
-	// Configure the pull-up/pull-down settings
-	pinNumber = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber;
-	// uint8_t LSB = (pinNumber << 1);
-	// Reset the pull-up/down register before setting individual bits
-	pGPIOHandle->pGPIOx->PULL_UP_DOWN &= ~(0x3 << LSB);
-	pGPIOHandle->pGPIOx->PULL_UP_DOWN |=
-			(pGPIOHandle->GPIO_PinConfig.GPIO_PinPuPdControl << LSB);
-
-	// Configure the output type
-	pinNumber = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber;
-	// Reset the output type register before setting individual bits
-	pGPIOHandle->pGPIOx->OUTPUT_TYPE &= ~(1 << pinNumber);
-	pGPIOHandle->pGPIOx->OUTPUT_TYPE |=
-			(pGPIOHandle->GPIO_PinConfig.GPIO_PinOPType << pinNumber);
+	pGPIOHandle->pGPIOx->MODE_REG &= ~(0x3 << LSB);
+	pGPIOHandle->pGPIOx->MODE_REG |= (pGPIOHandle->GPIO_PinConfig.GPIO_PinMode << LSB);
 }
 
-void GPIO_DeInit(GPIO_RegDef_t *pGPIOx) {
-	if (pGPIOx == GPIOA) {
+void configure_irq_mode(GPIO_Handle_t *pGPIOHandle)
+{
+	// configure trigger mode
+	uint8_t lineNumber = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber;
+	if (pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_FT || pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_RFT)
+	{
+		EXTI->FTSR |= (1 << lineNumber);
+	}
+	if (pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_RT || pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_RFT)
+	{
+		EXTI->RTSR |= (1 << lineNumber);
+	}
+
+	// configure port
+	SYSCFG_PCLK_EN();
+	uint8_t pinNumber = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber;
+	uint8_t x = pinNumber / 4;
+	uint8_t offset = (pinNumber % 4) * 4;
+	uint8_t PORT_CODE = GPIO_BASEADDR_TO_CODE(pGPIOHandle->pGPIOx);
+	SYSCFG->EXTICR[x] |= (PORT_CODE << offset);
+
+	// enable interrupt
+	EXTI->IMR |= (1 << lineNumber);
+}
+
+void configure_output_speed(GPIO_Handle_t *pGPIOHandle)
+{
+	uint8_t pinNumber = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber;
+	uint8_t LSB = (pinNumber << 1);
+	pGPIOHandle->pGPIOx->OUTPUT_SPEED &= ~(0x3 << LSB);
+	pGPIOHandle->pGPIOx->OUTPUT_SPEED |= (pGPIOHandle->GPIO_PinConfig.GPIO_PinSpeed << LSB);
+}
+
+void configure_pull_up_down(GPIO_Handle_t *pGPIOHandle)
+{
+	uint8_t pinNumber = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber;
+	uint8_t LSB = (pinNumber << 1);
+	pGPIOHandle->pGPIOx->PULL_UP_DOWN &= ~(0x3 << LSB);
+	pGPIOHandle->pGPIOx->PULL_UP_DOWN |= (pGPIOHandle->GPIO_PinConfig.GPIO_PinPuPdControl << LSB);
+}
+
+void configure_output_type(GPIO_Handle_t *pGPIOHandle)
+{
+	uint8_t pinNumber = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber;
+	pGPIOHandle->pGPIOx->OUTPUT_TYPE &= ~(1 << pinNumber);
+	pGPIOHandle->pGPIOx->OUTPUT_TYPE |= (pGPIOHandle->GPIO_PinConfig.GPIO_PinOPType << pinNumber);
+}
+
+void GPIO_Init(GPIO_Handle_t *pGPIOHandle)
+{
+	if (pGPIOHandle->GPIO_PinConfig.GPIO_PinMode <= GPIO_MODE_ANALOG)
+	{
+		configure_pin_mode(pGPIOHandle);
+	}
+	else
+	{
+		configure_irq_mode(pGPIOHandle);
+	}
+
+	configure_output_speed(pGPIOHandle);
+	configure_pull_up_down(pGPIOHandle);
+	configure_output_type(pGPIOHandle);
+}
+
+void GPIO_DeInit(GPIO_RegDef_t *pGPIOx)
+{
+	if (pGPIOx == GPIOA)
+	{
 		GPIOA_REG_RESET();
-	} else if (pGPIOx == GPIOB) {
+	}
+	else if (pGPIOx == GPIOB)
+	{
 		GPIOB_REG_RESET();
-	} else if (pGPIOx == GPIOC) {
+	}
+	else if (pGPIOx == GPIOC)
+	{
 		GPIOC_REG_RESET();
-	} else if (pGPIOx == GPIOD) {
+	}
+	else if (pGPIOx == GPIOD)
+	{
 		GPIOD_REG_RESET();
-	} else if (pGPIOx == GPIOE) {
+	}
+	else if (pGPIOx == GPIOE)
+	{
 		GPIOE_REG_RESET();
-	} else if (pGPIOx == GPIOF) {
+	}
+	else if (pGPIOx == GPIOF)
+	{
 		GPIOF_REG_RESET();
-	} else if (pGPIOx == GPIOG) {
+	}
+	else if (pGPIOx == GPIOG)
+	{
 		GPIOG_REG_RESET();
-	} else if (pGPIOx == GPIOH) {
+	}
+	else if (pGPIOx == GPIOH)
+	{
 		GPIOH_REG_RESET();
-	} else if (pGPIOx == GPIOI) {
+	}
+	else if (pGPIOx == GPIOI)
+	{
 		GPIOI_REG_RESET();
 	}
 }
 
-uint8_t GPIO_ReadFromInputPin(GPIO_Handle_t *pGPIO_Handle) {
+uint8_t GPIO_ReadFromInputPin(GPIO_Handle_t *pGPIO_Handle)
+{
 	// Check if the GPIO handle pointer is not null
-	if (pGPIO_Handle == NULL) {
+	if (pGPIO_Handle == NULL)
+	{
 		printf("Error: GPIO handle is null\n");
-		return 0;  // or return an error code
+		return 0; // or return an error code
 	}
 	uint8_t PinNumber = pGPIO_Handle->GPIO_PinConfig.GPIO_PinNumber;
 	// Read the input value from the GPIO port
@@ -149,17 +214,19 @@ uint8_t GPIO_ReadFromInputPin(GPIO_Handle_t *pGPIO_Handle) {
 
 	// Apply a bit mask to isolate the desired pin value
 	uint16_t mask = (1 << PinNumber);
-	uint16_t result = input & mask;
+	uint16_t PinValue = input & mask;
 
-	// Convert the result to a boolean value and return it
-	return (result != 0);
+	// Convert the pin value to a boolean value and return it
+	return (PinValue != 0);
 }
 
-uint16_t GPIO_ReadFromInputPort(GPIO_RegDef_t *pGPIOx) {
+uint16_t GPIO_ReadFromInputPort(GPIO_RegDef_t *pGPIOx)
+{
 	// Check if the GPIO register pointer is not null
-	if (pGPIOx == NULL) {
+	if (pGPIOx == NULL)
+	{
 		printf("Error: GPIO register pointer is null\n");
-		return 0;  // or return an error code
+		return 0; // or return an error code
 	}
 
 	// Read the input data register and return its value
@@ -167,18 +234,24 @@ uint16_t GPIO_ReadFromInputPort(GPIO_RegDef_t *pGPIOx) {
 	return inputData;
 }
 
-void GPIO_WriteToOutputPin(GPIO_Handle_t *pGPIO_Handle, uint8_t Value) {
+void GPIO_WriteToOutputPin(GPIO_Handle_t *pGPIO_Handle, uint8_t Value)
+{
 	// Extract the pin number from the GPIO configuration
 	uint8_t pinNumber = pGPIO_Handle->GPIO_PinConfig.GPIO_PinNumber;
 
 	// Check the input value and set the corresponding bit in the output data register
-	if (Value == 1) {
+	if (Value == 1)
+	{
 		// Set the pin to high (logic level 1)
 		pGPIO_Handle->pGPIOx->OUTPUT_DATA_REG |= (1 << pinNumber);
-	} else if (Value == 0) {
+	}
+	else if (Value == 0)
+	{
 		// Set the pin to low (logic level 0)
 		pGPIO_Handle->pGPIOx->OUTPUT_DATA_REG &= ~(1 << pinNumber);
-	} else {
+	}
+	else
+	{
 		// Handle invalid input values - print an error message or return an error code
 		printf("Error: Invalid value %d for GPIO pin\n", Value);
 		// Alternatively, return an error code to indicate invalid input
@@ -186,43 +259,60 @@ void GPIO_WriteToOutputPin(GPIO_Handle_t *pGPIO_Handle, uint8_t Value) {
 	}
 }
 
-void GPIO_WriteToOutputPort(GPIO_RegDef_t *pGPIOx, uint16_t Value) {
+void GPIO_WriteToOutputPort(GPIO_RegDef_t *pGPIOx, uint16_t Value)
+{
 	// Check if the GPIO register pointer is not null
-	if (pGPIOx == NULL) {
+	if (pGPIOx == NULL)
+	{
 		printf("Error: GPIO register pointer is null\n");
-		return;  // or return an error code
+		return; // or return an error code
 	}
 
 	// Write the value to the GPIO output data register
 	pGPIOx->OUTPUT_DATA_REG = Value;
 }
 
-void toggle_bit(uint16_t *value, int bit_position) {
-	if (value == NULL || bit_position < 0 || bit_position >= 16) {
+void GPIO_ToggleOutputPin(GPIO_Handle_t *pGPIO_Handle)
+{
+	if (pGPIO_Handle == NULL || pGPIO_Handle->pGPIOx == NULL)
+	{
 		// handle invalid inputs
-		printf("Error: invalid inputs arguments\n");
+		printf("Error: invalid GPIO handle\n");
 		return;
 	}
-	*value ^= (1 << bit_position);
-}
 
-void GPIO_ToggleOutputPin(GPIO_Handle_t *pGPIO_Handle) {
+	// Get the current output value
 	uint16_t output = pGPIO_Handle->pGPIOx->OUTPUT_DATA_REG;
+
 	// Toggle the pin specified by the GPIO_PinConfig
 	int pin_number = pGPIO_Handle->GPIO_PinConfig.GPIO_PinNumber;
-	toggle_bit(&pGPIO_Handle->pGPIOx->OUTPUT_DATA_REG, pin_number);
+	if (pin_number >= 0 && pin_number < 16)
+	{
+		// Toggle the bit at the specified position
+		output ^= (1 << pin_number);
+		pGPIO_Handle->pGPIOx->OUTPUT_DATA_REG = output;
+	}
+	else
+	{
+		// handle invalid pin number
+		printf("Error: invalid pin number\n");
+		return;
+	}
 }
 
 // ####################################### Praktikum 3: IRQ ############################################################
 
-void GPIO_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnorDi) {
+void GPIO_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnorDi)
+{
 	// Hinweis: Bedenken Sie welche ISER und ICER Register des Prozessors in dem verwendeten Mikrocontroller benutzt werden können.
 	// Nicht alle Interrupts sind im Mikrocontroller aktiv. Überprüfen sie dazu das Handbuch (Reference Manual) des Mikrocontrollers.
-	if (EnorDi == ENABLE) {
-		//ToDo -> DONE Programmieren der entsprechenden ISERx register
+	if (EnorDi == ENABLE)
+	{
+		// ToDo -> DONE Programmieren der entsprechenden ISERx register
 		uint8_t NVIC_ISERx = IRQNumber / 32;
 		uint8_t SETENAx = IRQNumber % 32;
-		switch (NVIC_ISERx) {
+		switch (NVIC_ISERx)
+		{
 		case 0:
 			*(NVIC_ISER0) |= (1 << SETENAx);
 			break;
@@ -244,11 +334,14 @@ void GPIO_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnorDi) {
 		case 7:
 			break;
 		}
-	} else {
-		//ToDo -> DONE Programmieren der entsprechenden ICERx register
+	}
+	else
+	{
+		// ToDo -> DONE Programmieren der entsprechenden ICERx register
 		uint8_t NVIC_ICERx = IRQNumber / 32;
 		uint8_t CLRENA = IRQNumber % 32;
-		switch (NVIC_ICERx) {
+		switch (NVIC_ICERx)
+		{
 		case 0:
 			*(NVIC_ICER0) |= (1 << CLRENA);
 			break;
@@ -273,9 +366,11 @@ void GPIO_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnorDi) {
 	}
 }
 
-void GPIO_IRQHandling(uint8_t PinNumber) {
+void GPIO_IRQHandling(uint8_t PinNumber)
+{
 	// Abfrage und zurücksetzen des EXTI-PR bits
-	if (EXTI->PR & (1 << PinNumber)) {
+	if (EXTI->PR & (1 << PinNumber))
+	{
 		// clear
 		EXTI->PR |= (1 << PinNumber);
 	}
